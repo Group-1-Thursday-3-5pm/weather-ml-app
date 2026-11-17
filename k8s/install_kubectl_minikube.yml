@@ -1,0 +1,56 @@
+- name: Install kubectl and Minikube
+  hosts: localhost
+  user: ubuntu
+  become: yes
+
+  tasks:
+    - name: Get latest stable kubectl version
+      ansible.builtin.uri:
+        url: https://dl.k8s.io/release/stable.txt
+        return_content: yes
+      register: kube_version
+
+    - name: Download kubectl binary
+      ansible.builtin.get_url:
+        url: "https://dl.k8s.io/release/{{ kube_version.content | trim }}/bin/linux/amd64/kubectl"
+        dest: /usr/local/bin/kubectl
+        mode: '0755'
+
+    - name: Download Minikube binary
+      ansible.builtin.get_url:
+        url: https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+        dest: /usr/local/bin/minikube
+        mode: '0755'
+
+    - name: Add ubuntu user to docker group
+      ansible.builtin.user:
+        name: ubuntu
+        groups: docker
+        append: yes
+
+    - name: Verify kubectl
+      ansible.builtin.command: kubectl version --client
+      register: kubectl_out
+      changed_when: false
+
+    - ansible.builtin.debug:
+        var: kubectl_out.stdout
+
+- name: Start Minikube
+  hosts: localhost
+  user: ubuntu
+  become: no
+
+  tasks:
+    - name: Start Minikube with Docker driver
+      ansible.builtin.command: minikube start --driver=docker
+      register: mk_start
+      changed_when: "'Done!' in mk_start.stdout"
+
+    - name: Check Minikube status
+      ansible.builtin.command: minikube status
+      register: mk_status
+      changed_when: false
+
+    - ansible.builtin.debug:
+        var: mk_status.stdout

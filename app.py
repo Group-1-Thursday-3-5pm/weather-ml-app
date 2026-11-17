@@ -14,6 +14,7 @@ def classify_weather(features):
 	model = load_model()
 	start = time.time()
 	prediction_index = model.predict(features)[0]
+	print("Model prediction index:", prediction_index)
 	latency = round((time.time() - start) * 1000, 2) #we are here
 	prediction = weather_classes[prediction_index]
 	

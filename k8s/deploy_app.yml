@@ -1,32 +1,42 @@
 cd ~/ansible
 cat > playbooks/deploy_app.yml << 'EOF'
 ---
+# Task 3 (c), (d), (e): deploy the app to Minikube on the Production Server
 - name: Deploy weather-ml-app to Minikube
   hosts: localhost
   user: ubuntu
-  become: no
+  become: no   # kubectl must run as the ubuntu user, not root
 
   tasks:
+    # Task 3(c): create a Deployment that pulls our image from DockerHub
+    # failed_when lets the playbook be rerun safely if the deployment already exists
     - name: Deploy image from DockerHub
       ansible.builtin.command: kubectl create deployment weather-ml-app --image=seanfc8/weather-ml-app:v1 --port=5000
       register: dep
       failed_when: dep.rc != 0 and 'already exists' not in dep.stderr
 
+    # Task 3(e): run 3 copies (pods) so a rolling update can replace them one at a time
+    # without downtime (Kubernetes uses the RollingUpdate strategy by default)
     - name: Scale to 3 replicas for rolling updates
       ansible.builtin.command: kubectl scale deployment weather-ml-app --replicas=3
 
+    # Task 3(d): create a NodePort Service so the app is reachable from outside the cluster
+    # port 5000 is the port the Flask app listens on
     - name: Create NodePort service
       ansible.builtin.command: kubectl expose deployment weather-ml-app --name=weather-ml-app-service --type=NodePort --port=5000
       register: svc
       failed_when: svc.rc != 0 and 'already exists' not in svc.stderr
 
+    # Wait until all pods are running before moving on
     - name: Wait for pods to be ready
       ansible.builtin.command: kubectl rollout status deployment/weather-ml-app --timeout=180s
 
+    # Show the pods and service so the result is visible as evidence
     - name: Show pods and service
       ansible.builtin.command: kubectl get pods,svc
       register: out
 
+    # Print the output from the previous task in the terminal
     - ansible.builtin.debug:
         var: out.stdout_lines
 EOF

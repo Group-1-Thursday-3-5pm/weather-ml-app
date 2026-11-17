@@ -1,0 +1,38 @@
+- name: Deploy app to Minikube
+  hosts: localhost
+  user: ubuntu
+  become: no
+
+  vars:
+    app_name: weather-ml-app
+    image: seanfc8/weather-ml-app:v1
+    app_port: 5000
+    replicas: 3
+
+  tasks:
+    - name: Create Deployment from DockerHub image
+      ansible.builtin.command: kubectl create deployment {{ app_name }} --image={{ image }} --port={{ app_port }}
+      register: dep
+      changed_when: dep.rc == 0
+      failed_when: dep.rc != 0 and 'already exists' not in dep.stderr
+
+    - name: Scale Deployment for rolling updates
+      ansible.builtin.command: kubectl scale deployment {{ app_name }} --replicas={{ replicas }}
+
+    - name: Create NodePort Service
+      ansible.builtin.command: kubectl expose deployment {{ app_name }} --name={{ app_name }}-service --type=NodePort --port={{ app_port }} --target-port={{ app_port }}
+      register: svc
+      changed_when: svc.rc == 0
+      failed_when: svc.rc != 0 and 'already exists' not in svc.stderr
+
+    - name: Wait for rollout to finish
+      ansible.builtin.command: kubectl rollout status deployment/{{ app_name }} --timeout=180s
+      changed_when: false
+
+    - name: Show pods and service
+      ansible.builtin.command: kubectl get pods,svc -o wide
+      register: out
+      changed_when: false
+
+    - ansible.builtin.debug:
+        var: out.stdout_lines

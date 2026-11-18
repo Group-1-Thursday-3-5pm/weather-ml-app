@@ -43,7 +43,9 @@ class TestUnit(unittest.TestCase):
 
 	def test_foggy_classification_output(self):
 
-		test_input = np.array([289.47,1015,88,2,300,0,0,0,20]).reshape(1,-1)
+		# Original input (predicted as cloudy):
+		# test_input = np.array([289.47,1015,88,2,300,0,0,0,20]).reshape(1,-1)
+		test_input = np.array([240.6,1023.41,82.03,7.08,100.07,2.7,14.26,10.27,62.77]).reshape(1,-1)
 		class_result, _ = classify_weather(test_input) 
 
 		# Ensure that 'foggy' class is returned

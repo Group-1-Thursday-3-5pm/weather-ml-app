@@ -8,6 +8,8 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    env:
+      IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/weather-ml-app:v1
 
     steps:
       - name: Checkout Code
@@ -22,14 +24,18 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-                - name: Run Smoke Test
+      - name: Run Smoke Test
         run: |
-          python -m unittest tests/smoke_test.py
+          python -m unittest tests.smoke_test
 
       - name: Run Unit Test
         run: |
-          python -m unittest tests/unit_test.py
+          python -m unittest tests.unit_test
 
       - name: Run Integration Test
         run: |
-          python -m unittest tests/integration_test.py
+          python -m unittest tests.integration_test
+
+      - name: Build Docker Image
+        run: |
+          docker build -t $IMAGE .

@@ -39,3 +39,11 @@ jobs:
       - name: Build Docker Image
         run: |
           docker build -t $IMAGE .
+
+        - name: Build Test (launch container)
+        run: |
+          docker run -d --name test-container $IMAGE
+          sleep 10
+          docker ps | grep test-container
+          docker exec test-container python --version
+          docker rm -f test-container

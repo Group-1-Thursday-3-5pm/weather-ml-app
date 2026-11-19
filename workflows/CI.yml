@@ -41,9 +41,18 @@ jobs:
           docker build -t $IMAGE .
 
         - name: Build Test (launch container)
-        run: |
+          run: |
           docker run -d --name test-container $IMAGE
           sleep 10
           docker ps | grep test-container
           docker exec test-container python --version
           docker rm -f test-container
+
+          - name: Docker Login
+            uses: docker/login-action@v3
+              with:
+            username: ${{ secrets.DOCKERHUB_USERNAME }}
+            password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+          - name: Push Image to DockerHub
+            run: docker push $IMAGE

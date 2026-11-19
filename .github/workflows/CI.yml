@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - Task-4-test
+      - main
 
 jobs:
   build-and-test:

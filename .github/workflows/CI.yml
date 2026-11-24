@@ -39,7 +39,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t $IMAGE .
+          docker build -t $IMAGE -t ${IMAGE%:*}:${{ github.sha }} 
 
       - name: Build Test (launch container)
         run: |

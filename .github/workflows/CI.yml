@@ -9,7 +9,7 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     env:
-      IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/weather-ml-app:v2
+      IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/weather-ml-app:v1
 
     steps:
       - name: Checkout Code
